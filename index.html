@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Opportunities</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #f3f4f6;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .page-title {
+            text-align: center;
+            color: #1f2937;
+            font-size: 2rem;
+            margin-bottom: 30px;
+        }
+        .filters {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .filter-group {
+            flex: 1;
+        }
+        .filter-label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4b5563;
+            font-size: 0.875rem;
+        }
+        .filter-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+        }
+        .job-listing {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            cursor: pointer;
+        }
+        .job-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .job-tags {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .job-tag {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+        .location-tag {
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .contract-tag {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        .deadline-tag {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .job-details {
+            display: none;
+            background-color: #f9fafb;
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .job-details.active {
+            display: block;
+        }
+        .details-section {
+            margin-bottom: 15px;
+        }
+        .details-title {
+            font-size: 1.125rem;
+            font-weight: semibold;
+            margin-bottom: 10px;
+            color: #374151;
+        }
+        .apply-button {
+            display: inline-block;
+            background-color: #4f46e5;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            margin-top: 15px;
+        }
+        .apply-button:hover {
+            background-color: #4338ca;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+        }
+        .error {
+            background-color: #fee2e2;
+            color: #7f1d1d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">Job Opportunities</h1>
+        
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="search" class="filter-label">Search</label>
+                    <input type="text" id="search" class="filter-input" placeholder="Search job title or description">
+                </div>
+                <div class="filter-group">
+                    <label for="location" class="filter-label">Location</label>
+                    <input type="text" id="location" class="filter-input" placeholder="Filter by location">
+                </div>
+                <div class="filter-group">
+                    <label for="contractType" class="filter-label">Contract Type</label>
+                    <select id="contractType" class="filter-input">
+                        <option value="">All Types</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div id="job-listings"></div>
+    </div>
+
+    <script>
+        // Hardcoded job listings
+        const jobListings = [
+            {
+                id: '1',
+                jobTitle: 'Frontend Developer',
+                description: 'We are looking for a skilled Frontend Developer to join our innovative team.',
+                location: 'New York, NY',
+                contractType: 'Full-time',
+                deadline: '2024-12-31',
+                qualification: 'Bachelor\'s degree in Computer Science or related field',
+                requirements: 'Proficient in React, JavaScript, HTML, CSS',
+                applicationLink: '#'
+            },
+            {
+                id: '2',
+                jobTitle: 'Data Scientist',
+                description: 'Exciting opportunity for a Data Scientist to work on cutting-edge machine learning projects.',
+                location: 'San Francisco, CA',
+                contractType: 'Contract',
+                deadline: '2024-06-30',
+                qualification: 'Master\'s degree in Data Science or related field',
+                requirements: 'Experience with Python, Machine Learning, Data Visualization',
+                applicationLink: '#'
+            },
+            {
+                id: '3',
+                jobTitle: 'UX Designer',
+                description: 'We need a creative UX Designer to improve our product\'s user experience.',
+                location: 'Remote',
+                contractType: 'Part-time',
+                deadline: '2024-09-15',
+                qualification: 'Degree in Design or relevant experience',
+                requirements: 'Proficient in Figma, Sketch, Adobe XD',
+                applicationLink: '#'
+            }
+        ];
+
+        // Utility functions
+        function formatDate(dateString) {
+            if (!dateString) return 'No deadline specified';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function isDeadlinePassed(dateString) {
+            if (!dateString) return false;
+            const deadline = new Date(dateString);
+            const today = new Date();
+            return today > deadline;
+        }
+
+        // DOM Elements
+        const searchInput = document.getElementById('search');
+        const locationInput = document.getElementById('location');
+        const contractTypeSelect = document.getElementById('contractType');
+        const jobListingsContainer = document.getElementById('job-listings');
+
+        // State
+        let expandedJobId = null;
+
+        // Update contract type filter options
+        function updateContractTypeFilter() {
+            const contractTypes = [...new Set(jobListings.map(job => job.contractType).filter(Boolean))];
+            contractTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                contractTypeSelect.appendChild(option);
+            });
+        }
+
+        // Filter jobs
+        function filterJobs() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const locationFilter = locationInput.value.toLowerCase();
+            const contractTypeFilter = contractTypeSelect.value;
+
+            const filteredJobs = jobListings.filter(job => {
+                const matchesSearch = job.jobTitle?.toLowerCase().includes(searchTerm) || 
+                                     job.description?.toLowerCase().includes(searchTerm);
+                const matchesLocation = locationFilter === '' || job.location?.toLowerCase().includes(locationFilter);
+                const matchesContractType = contractTypeFilter === '' || job.contractType === contractTypeFilter;
+                
+                return matchesSearch && matchesLocation && matchesContractType;
+            });
+
+            renderJobListings(filteredJobs);
+        }
+
+        // Render job listings
+        function renderJobListings(jobs = jobListings) {
+            jobListingsContainer.innerHTML = jobs.map(job => `
+                <div class="job-listing" data-job-id="${job.id}">
+                    <div class="job-header" onclick="toggleJobDetails('${job.id}')">
+                        <div>
+                            <div class="job-title">${job.jobTitle}</div>
+                            <div class="job-tags">
+                                ${job.location ? `
+                                    <span class="job-tag location-tag">
+                                        📍 ${job.location}
+                                    </span>
+                                ` : ''}
+                                ${job.contractType ? `
+                                    <span class="job-tag contract-tag">
+                                        ${job.contractType}
+                                    </span>
+                                ` : ''}
+                                ${job.deadline ? `
+                                    <span class="job-tag deadline-tag">
+                                        Deadline: ${formatDate(job.deadline)}
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <span>▼</span>
+                    </div>
+                    <div id="job-details-${job.id}" class="job-details">
+                        <div class="details-section">
+                            <h3 class="details-title">Description</h3>
+                            <p>${job.description}</p>
+                        </div>
+                        ${job.qualification ? `
+                            <div class="details-section">
+                                <h3 class="details-title">Qualifications</h3>
+                                <p>${job.qualification}</p>
+                            </div>
+                        ` : ''}
+                        ${job.requirements ? `
+                            <div class="details-section">
+                                <h3 class="details-title">Requirements</h3>
+                                <p>${job.requirements}</p>
+                            </div>
+                        ` : ''}
+                        <div>
+                            ${isDeadlinePassed(job.deadline) ? `
+                                <div class="error">
+                                    <p>Application deadline has passed</p>
+                                    <p>This position is no longer accepting applications.</p>
+                                </div>
+                            ` : `
+                                <a href="${job.applicationLink}" target="_blank" class="apply-button">
+                                    Apply Now
+                                </a>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Toggle job details
+        function toggleJobDetails(jobId) {
+            const detailsElement = document.getElementById(`job-details-${jobId}`);
+            
+            if (expandedJobId === jobId) {
+                detailsElement.classList.remove('active');
+                expandedJobId = null;
+            } else {
+                // Close previously opened details
+                if (expandedJobId) {
+                    const prevDetailsElement = document.getElementById(`job-details-${expandedJobId}`);
+                    prevDetailsElement.classList.remove('active');
+                }
+                
+                detailsElement.classList.add('active');
+                expandedJobId = jobId;
+            }
+        }
+
+        // Event Listeners
+        searchInput.addEventListener('input', filterJobs);
+        locationInput.addEventListener('input', filterJobs);
+        contractTypeSelect.addEventListener('change', filterJobs);
+
+        // Initial render and filter setup
+        renderJobListings();
+        updateContractTypeFilter();
+    </script>
+</body>
+</html>
